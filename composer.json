@@ -1,0 +1,14 @@
+{
+    "name": "ritenn/implementator",
+    "description": "Binding automatically interfaces to implementation and also helps creating custom class files e.g. Service or Repository.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michał Płócieniak",
+            "email": "michalplocieniak@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
