@@ -8,51 +8,44 @@ interface ProcessCreateClassContract {
     /**
      * Make interface and implement to class
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      *
      * @return array
      */
-    public function make(string $typeOfClass, string $fileName) : array;
-
-    /**
-     * Check if class is being executed from CLI.
-     *
-     * @return bool
-     */
-    public function isCLI() : bool;
+    public function make(string $typeOfLayer, string $fileName) : array;
 
     /**
      * Creates interface.
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      *
      * @return bool
      */
-    public function createInterface(string $typeOfClass, string $fileName) : bool;
+    public function createInterface(string $typeOfLayer, string $fileName) : bool;
 
     /**
      * Creates interface implementation.
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      *
      * @return bool
      */
-    public function createClassImplementation(string $typeOfClass, string $fileName) : bool;
+    public function createClassImplementation(string $typeOfLayer, string $fileName) : bool;
 
     /**
-     * Creates directory (if needed) and file based on $typeOfClass
+     * Creates directory (if needed) and file based on $typeOfLayer
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      * @param String $content - file content
      * @param bool $isContract (default: false)
      *
      * @return bool
      */
-    public function createFile(string $typeOfClass, string $fileName, String $content, bool $isContract = false) : bool;
+    public function createFile(string $typeOfLayer, string $fileName, String $content, bool $isContract = false) : bool;
 
     /**
      * Creates folder based on given $fullPath.
@@ -63,17 +56,4 @@ interface ProcessCreateClassContract {
      */
     public function createFolder(string $fullPath) : bool;
 
-    /**
-     * @param string $fullPath
-     *
-     * @return bool
-     */
-    public function checkIfFolderExists(string $fullPath) : bool;
-
-    /**
-     * @param string $fullPath
-     *
-     * @return bool
-     */
-    public function checkIfFileExists(string $fullPath) : bool;
 }

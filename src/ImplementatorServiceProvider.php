@@ -10,19 +10,35 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Ritenn\Implementator\Commands\MakeRepositoryClass;
 use Ritenn\Implementator\Commands\MakeServiceClass;
+use Ritenn\Implementator\Contracts\BindingContract;
 
 class ImplementatorServiceProvider extends ServiceProvider
 {
     /**
-     * Boot the service provider.
+     * Real time binding or based on cache data
      *
-     * @return void
+     * @param BindingContract $bindingService
+     * @throws \Exception
      */
-    public function boot()
+    public function boot(BindingContract $bindingService)
     {
-        //Commands are allowed only in local/dev
-        if (!$this->isProduction()) {
-            $this->bindCommands();
+        $this->setCommands();
+        $this->setConfig();
+
+        /**
+         * Implements all created Contracts/Interfaces to Services and/or Repositories
+         */
+        if ($bindingService->canLoadFromCache() && $this->isProduction()) {
+
+            foreach ($bindingService->cachedBindings as $binding)
+            {
+                $binding = collect($binding);
+                $this->app->bind($binding->first(), $binding->last());
+            }
+
+        } else {
+            $bindingService->resetCache();
+            $bindingService->register();
         }
     }
 
@@ -33,29 +49,67 @@ class ImplementatorServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //Commands are allowed only in local/dev
-        if (!$this->isProduction())
-        {
-            //Bind commands required logic
-            $this->app->bind(
-                \Ritenn\Implementator\Contracts\ProcessCreateClassContract::class,
-                \Ritenn\Implementator\Services\ProcessCreateClassService::class
-            );
-        }
+        $this->bindPackageInterfaces();
     }
 
-    public function isProduction() : bool
+
+    /**
+     * Set configs & allows to publish
+     */
+    private function setConfig() : void
+    {
+        $vendorPath = __DIR__ . '/Config/implementator.php';
+
+        $this->publishes([
+            $vendorPath  => config_path('implementator.php')
+        ]);
+
+        $this->mergeConfigFrom(
+            $vendorPath, 'implementator'
+        );
+
+    }
+
+    /**
+     * Checks environment
+     * Commands are allowed only in local/dev environment
+     *
+     * @return bool
+     */
+    private function isProduction() : bool
     {
         return in_array(config('app.env'), ['prod', 'production']) || !config('app.debug');
     }
 
-    private function bindCommands()
+    /**
+     * Set commands
+     */
+    private function setCommands() : void
     {
-        if ($this->app->runningInConsole()) {
+        if ($this->app->runningInConsole() && !$this->isProduction()) {
             $this->commands([
                 MakeServiceClass::class,
                 MakeRepositoryClass::class
             ]);
+        }
+    }
+
+    /**
+     * Binds package interfaces to implementations
+     */
+    private function bindPackageInterfaces()
+    {
+        $this->app->bind(
+            \Ritenn\Implementator\Contracts\BindingContract::class,
+            \Ritenn\Implementator\Services\BindingService::class
+        );
+
+        if (!$this->isProduction())
+        {
+            $this->app->bind(
+                \Ritenn\Implementator\Contracts\ProcessCreateClassContract::class,
+                \Ritenn\Implementator\Services\ProcessCreateClassService::class
+            );
         }
     }
 }

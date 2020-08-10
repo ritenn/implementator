@@ -1,32 +1,23 @@
 <?php
+declare(strict_types=1);
 
 namespace Ritenn\Implementator\Services;
 
 
 use Ritenn\Implementator\Contracts\ProcessCreateClassContract;
+use Ritenn\Implementator\ImplementatorBase;
 
-class ProcessCreateClassService implements ProcessCreateClassContract {
-
-    /**
-     * Project base path
-     * @var string
-     */
-    private $baseAppPath;
-
-    public function __construct()
-    {
-        $this->baseAppPath = base_path() . "/app/";
-    }
+class ProcessCreateClassService extends ImplementatorBase implements ProcessCreateClassContract {
 
     /**
      * Make interface and implement to class
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      *
      * @return array
      */
-    public function make(string $typeOfClass, string $fileName) : array
+    public function make(string $typeOfLayer, string $fileName) : array
     {
         if (!$this->isCLI())
         {
@@ -36,8 +27,8 @@ class ProcessCreateClassService implements ProcessCreateClassContract {
             ];
         };
 
-        if ( $this->checkIfFileExists($this->getContractFullPath($typeOfClass, $fileName)) &&
-            $this->checkIfFileExists($this->getImplementationFullPath($typeOfClass, $fileName)) )
+        if ( $this->checkIfFileExists($this->getContractFileFullPath($typeOfLayer, $fileName)) &&
+            $this->checkIfFileExists($this->getImplementationFileFullPath($typeOfLayer, $fileName)) )
         {
             return [
                 'error' => true,
@@ -45,7 +36,7 @@ class ProcessCreateClassService implements ProcessCreateClassContract {
             ];
         }
 
-        if ( $this->createInterface($typeOfClass, $fileName) && $this->createClassImplementation($typeOfClass, $fileName) )
+        if ( $this->createInterface($typeOfLayer, $fileName) && $this->createClassImplementation($typeOfLayer, $fileName) )
         {
             return [
                 'error' => false,
@@ -60,79 +51,72 @@ class ProcessCreateClassService implements ProcessCreateClassContract {
     }
 
     /**
-     * Check if class is being executed from CLI.
-     *
-     * @return bool
-     */
-    public function isCLI() : bool
-    {
-       return app()->runningInConsole();
-    }
-
-    /**
      * Creates interface.
      * 
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      * 
      * @return bool
      */
-    public function createInterface(string $typeOfClass, string $fileName) : bool
+    public function createInterface(string $typeOfLayer, string $fileName) : bool
     {
-        $name = $fileName  . 'Contract';
+        $namespace = $this->getNamespace(true, $typeOfLayer);
+        $className = $this->getClassName($fileName, true, $typeOfLayer);
 
         $template = "<?php\n";
-        $template .= "\r\nnamespace App\Contracts\\" . $typeOfClass . ";\n\n";
-        $template .= "\r\ninterface " . $name . " {\n\n";
+        $template .= "\r\nnamespace " . $namespace . ";\n\n";
+        $template .= "\r\ninterface " . $className . " {\n\n";
         $template .= "\r\n}";
 
-        return $this->createFile($typeOfClass, $fileName, $template, true);
+        return $this->createFile($typeOfLayer, $fileName, $template, true);
     }
 
     /**
      * Creates interface implementation.
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      *
      * @return bool
      */
-    public function createClassImplementation(string $typeOfClass, string $fileName) : bool
+    public function createClassImplementation(string $typeOfLayer, string $fileName) : bool
     {
-        $contractName = $fileName  . "Contract";
-        $className = $fileName  . \Str::singular($typeOfClass);
+        $namespace = $this->getNamespace(false, $typeOfLayer);
+        $interfaceNamespace = $this->getNamespace(true, $typeOfLayer);
+        $contractName = $this->getClassName($fileName, true, $typeOfLayer);;
+        $className = $this->getClassName($fileName, false, $typeOfLayer);
 
         $template = "<?php\n";
-        $template .= "\r\nnamespace App\\" . $typeOfClass . ";\n\n";
-        $template .= "\r\nuse App\Contracts\\" . $typeOfClass . "\\" . $contractName . ";\n";
+        $template .= "\r\nnamespace " . $namespace . ";\n\n";
+        $template .= "\r\nuse " . $interfaceNamespace . '\\' . $contractName . ";\n";
         $template .= "\r\nclass " . $className . " implements " . $contractName  . " {\n\n";
         $template .= "\r\n}";
 
-        return $this->createFile($typeOfClass, $fileName, $template);
+        return $this->createFile($typeOfLayer, $fileName, $template);
     }
 
     /**
-     * Creates directory (if needed) and file based on $typeOfClass
+     * Creates directory (if needed) and file based on $typeOfLayer
      *
-     * @param string $typeOfClass
+     * @param string $typeOfLayer
      * @param string $fileName
      * @param String $content - file content
      * @param bool $isContract (default: false)
      *
      * @return bool
      */
-    public function createFile(string $typeOfClass, string $fileName, String $content, bool $isContract = false) : bool
+    public function createFile(string $typeOfLayer, string $fileName, String $content, bool $isContract = false) : bool
     {
 
-        $path = $isContract ? $this->baseAppPath . 'Contracts/' . $typeOfClass : $this->baseAppPath . $typeOfClass;
-        $name = $isContract ? $fileName . 'Contract.php' : $fileName . \Str::singular($typeOfClass) . '.php';
-        $fullFilePath = $path . '/' . $name;
+        $path = $this->getFolderPath($isContract, $typeOfLayer);
+        $filenameWithExtension = $this->getFileNameWithExtension($fileName, $isContract, $typeOfLayer);
+        $fullFilePath = $path . '/' . $filenameWithExtension;
 
         $this->createFolder($path);
 
         if ($this->checkIfFolderExists($path) && !$this->checkIfFileExists($fullFilePath))
         {
-            return \File::put($fullFilePath, $content) ?? false;
+            return (bool) \File::put($fullFilePath, $content) ?? false;
         }
 
         return false;
@@ -150,52 +134,13 @@ class ProcessCreateClassService implements ProcessCreateClassContract {
 
         if (!$this->checkIfFolderExists($fullPath))
         {
-
             return \File::makeDirectory($fullPath, 0755, true, true) ?? false;
         }
 
         return false;
     }
 
-    /**
-     * @param string $fullPath
-     *
-     * @return bool
-     */
-    public function checkIfFolderExists(string $fullPath) : bool
-    {
-        return \File::exists($fullPath);
-    }
 
-    /**
-     * @param string $fullPath
-     *
-     * @return bool
-     */
-    public function checkIfFileExists(string $fullPath) : bool
-    {
-        return \File::exists($fullPath);
-    }
 
-    /**
-     * @param string $typeOfClass
-     * @param string $filename
-     *
-     * @return string
-     */
-    private function getImplementationFullPath(string $typeOfClass, string $filename) : string
-    {
-        return $this->baseAppPath . $typeOfClass . '/' . $filename . \Str::singular($typeOfClass) . '.php';
-    }
 
-    /**
-     * @param string $typeOfClass
-     * @param string $filename
-     *
-     * @return string
-     */
-    private function getContractFullPath(string $typeOfClass, string $filename) : string
-    {
-        return $this->baseAppPath . 'Contracts/' . $typeOfClass . '/' . $filename . 'Contract.php';
-    }
 }
