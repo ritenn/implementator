@@ -75,7 +75,7 @@ abstract class ImplementatorBase {
      */
     public function validateConfigSetTerminology() : void
     {
-        $terminology = config('implementator.terminology');
+        $terminology = config('implementator.terminology'); \Log::error(config('implementator.terminology'));
         $this->interfaceTerminology = in_array($terminology, array('Contracts', 'Interfaces')) ? $terminology : 'Contracts';
     }
 
@@ -94,7 +94,7 @@ abstract class ImplementatorBase {
      *
      * @return string
      */
-    public function getNamespace(bool $isContract, string $typeOfLayer) : string
+    public function getNamespaceByLayerName(bool $isContract, string $typeOfLayer) : string
     {
         if ($isContract && !$this->isContractsCategorizationEnabled)
         {
@@ -103,6 +103,50 @@ abstract class ImplementatorBase {
 
         return $isContract ? "App\\" . $this->interfaceTerminology . "\\" . $typeOfLayer : "App\\" . $typeOfLayer;
     }
+
+    /**
+     * Generates full contract namespace by layer class name
+     *
+     * @param string $layerClassName
+     *
+     * @return string
+     * @throws \Exception
+     */
+    public function getContractNamespaceByLayerClassName(string $layerClassName) : string
+    {
+        if (preg_match('/(.*)(Service|Repository)/', $layerClassName, $matches))
+        {
+            $classBaseName = $matches[1];
+            $classPrefix = $matches[2];
+            $typeOfLayer = \Str::plural($classPrefix);
+
+            return $this->getNamespaceByLayerName(true, $typeOfLayer) . '\\' . $classBaseName . \Str::singular($this->interfaceTerminology);
+        }
+
+        throw new \Exception('Ritenn\Implementator\ImplementatorBase : getContractNamespaceByLayerClassName: Wrong classname');
+    }
+
+    /**
+     * Generates full layer namespace by layer class name
+     *
+     * @param string $layerClassName
+     *
+     * @return string
+     * @throws \Exception
+     */
+    public function getLayerFullNamespaceByClassName(string $layerClassName) : string
+    {
+        if (preg_match('/(Service|Repository)/', $layerClassName, $matches))
+        {
+            $classPrefix = $matches[1];
+            $typeOfLayer = \Str::plural($classPrefix);
+
+            return $this->getNamespaceByLayerName(false, $typeOfLayer) . '\\' . $layerClassName;
+        }
+
+        throw new \Exception('Ritenn\Implementator\ImplementatorBase : getLayerFullNamespaceByClassName: Wrong classname');
+    }
+
 
     /**
      * @param string $fileNameBase
@@ -128,13 +172,10 @@ abstract class ImplementatorBase {
         $terminologyPrefix = \Str::singular($base);
         $terminologyStartPos = strpos($filename, $terminologyPrefix);
 
-
         if ($terminologyStartPos !== false)
         {
             return substr($filename, 0, $terminologyStartPos);
-
         } else {
-
             throw new \Exception('File doesn\'t contains terminology prefix, check implementator config file (config/implementator.php).');
         }
     }

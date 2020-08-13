@@ -12,18 +12,18 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^7.2.5",
-        "illuminate/contracts": "^6.0 || ^7.0",
-        "illuminate/support": "^6.0 || ^7.0"
+        "laravel/framework": "7.*"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.5 || ^9.0",
-        "orchestra/testbench": "^3.8"
+        "orchestra/testbench": "5.*"
     },
     "autoload": {
         "psr-4": {"Ritenn\\Implementator\\": "src/"}
     },
     "autoload-dev": {
         "psr-4": {
+            "App\\": "vendor/orchestra/testbench-core/laravel/app",
             "Ritenn\\Implementator\\Tests\\": "tests/"
         }
     },

@@ -3,3 +3,4 @@ vendor
 .git
 .phpunit.result.cache
 composer.lock
+artisan

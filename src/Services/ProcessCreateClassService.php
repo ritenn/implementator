@@ -60,7 +60,7 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
      */
     public function createInterface(string $typeOfLayer, string $fileName) : bool
     {
-        $namespace = $this->getNamespace(true, $typeOfLayer);
+        $namespace = $this->getNamespaceByLayerName(true, $typeOfLayer);
         $className = $this->getClassName($fileName, true, $typeOfLayer);
 
         $template = "<?php\n";
@@ -81,14 +81,14 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
      */
     public function createClassImplementation(string $typeOfLayer, string $fileName) : bool
     {
-        $namespace = $this->getNamespace(false, $typeOfLayer);
-        $interfaceNamespace = $this->getNamespace(true, $typeOfLayer);
+        $namespace = $this->getNamespaceByLayerName(false, $typeOfLayer);
         $contractName = $this->getClassName($fileName, true, $typeOfLayer);;
         $className = $this->getClassName($fileName, false, $typeOfLayer);
+        $contractNamespace = $this->getContractNamespaceByLayerClassName($className);
 
         $template = "<?php\n";
         $template .= "\r\nnamespace " . $namespace . ";\n\n";
-        $template .= "\r\nuse " . $interfaceNamespace . '\\' . $contractName . ";\n";
+        $template .= "\r\nuse " . $contractNamespace . ";\n";
         $template .= "\r\nclass " . $className . " implements " . $contractName  . " {\n\n";
         $template .= "\r\n}";
 

@@ -90,8 +90,8 @@ class BindingService extends ImplementatorBase implements BindingContract {
             $this->checkIfFileExists($this->getContractFileFullPath($layerName, $fileNameBase))
         ) {
 
-            $interface = $this->getNamespace(true, $layerName) . '\\' . $fileNameBase . \Str::singular($this->interfaceTerminology);
-            $implementation = $this->getNamespace(false, $layerName) . '\\' . $filename;
+            $interface = $this->getContractNamespaceByLayerClassName($filename);
+            $implementation = $this->getLayerFullNamespaceByClassName($filename);
 
             app()->bind($interface, $implementation);
             $this->addBindingToCachedArray($interface, $implementation);
