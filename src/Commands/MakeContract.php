@@ -6,23 +6,21 @@ namespace Ritenn\Implementator\Commands;
 use Illuminate\Console\Command;
 use Ritenn\Implementator\Contracts\ProcessCreateClassContract;
 
-class MakeRepositoryClass extends Command
+class MakeContract extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'make:repository 
-    {name : Repository file name}  
-    {--without-contract : create layer without contract implementation}';
+    protected $signature = 'make:contract {name : Contract base file name} {--layer= : Layer name - Services|Repositories}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Creates interface and implementation files.';
+    protected $description = 'Creates contract/interface file (You can change terminology in config).';
 
     private $processCreateClassService;
 
@@ -43,12 +41,17 @@ class MakeRepositoryClass extends Command
     public function handle()
     {
         $className = $this->argument('name');
-        $onlyLayer = $this->option('without-contract');
+        $layerName = $this->option('layer');
 
-        $result = $onlyLayer ? $this->processCreateClassService->makeOnlyLayer("Repositories", $className) :
-                               $this->processCreateClassService->make("Repositories", $className);
+        if (config('implementator.contracts_categories') && !in_array($layerName, ['Services', 'Repositories']))
+        {
+            return $this->error('Categorization is enabled, please pass layer name as \'--layer=\' parameter. Available options - Services or Repositories');
+        }
 
-        $messageType = $result['error'] ?  'error' : 'info';
+        $result = $layerName === null ? $this->processCreateClassService->makeOnlyContract($className) :
+                                        $this->processCreateClassService->makeOnlyContract($className, $layerName);
+
+        $messageType = $result['error'] ? 'error' : 'info';
         $message = $result['message'] ?? "Unknown error, please report it to package author";
 
         $this->$messageType($message);

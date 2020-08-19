@@ -16,6 +16,26 @@ interface ProcessCreateClassContract {
     public function make(string $typeOfLayer, string $fileName) : array;
 
     /**
+     * Creates only layer - Service or Repository without contract
+     *
+     * @param string $typeOfLayer
+     * @param string $fileName
+     *
+     * @return array
+     */
+    public function makeOnlyLayer(string $typeOfLayer, string $fileName) : array;
+
+    /**
+     * Make just contract
+     *
+     * @param string $typeOfLayer
+     * @param string $fileName
+     *
+     * @return array
+     */
+    public function makeOnlyContract(string $fileName, string $typeOfLayer = '') : array;
+
+    /**
      * Creates interface.
      *
      * @param string $typeOfLayer

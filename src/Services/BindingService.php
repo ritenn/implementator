@@ -39,7 +39,7 @@ class BindingService extends ImplementatorBase implements BindingContract {
         $layers = ['Services', 'Repositories'];
 
         /**
-         * Iterates through your layers and implements contracts/interfaces
+         * Iterates through layers and implements contracts/interfaces
          */
         foreach ($layers as $layer)
         {
@@ -93,12 +93,11 @@ class BindingService extends ImplementatorBase implements BindingContract {
             $interface = $this->getContractNamespaceByLayerClassName($filename);
             $implementation = $this->getLayerFullNamespaceByClassName($filename);
 
-            app()->bind($interface, $implementation);
-            $this->addBindingToCachedArray($interface, $implementation);
-
-        } else {
-
-            throw new \Exception("Interface or implementation filename is wrong or doesn't exists: " . $filename);
+            if (!$this->isBindingException($interface, $implementation))
+            {
+                app()->bind($interface, $implementation);
+                $this->addBindingToCachedArray($interface, $implementation);
+            }
 
         }
     }
@@ -145,6 +144,28 @@ class BindingService extends ImplementatorBase implements BindingContract {
     public function canLoadFromCache() : bool
     {
         return config('implementator.cache') && is_array($this->cachedBindings) && !empty($this->cachedBindings);
+    }
+
+    /**
+     * Check if binding exists in exception @config array
+     *
+     * @param string $contract
+     * @param string $implementation
+     *
+     * @return bool
+     */
+    public function isBindingException(string $contract, string $implementation) : bool
+    {
+        $exceptions = config('implementator.binding_exceptions');
+
+        if (empty($exceptions))
+        {
+            return false;
+        }
+
+        return collect($exceptions)->contains(function($exception) use ($contract, $implementation) {
+            return [$contract => $implementation] === $exception;
+        });
     }
 
 }

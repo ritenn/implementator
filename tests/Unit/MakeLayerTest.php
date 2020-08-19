@@ -16,7 +16,7 @@ class MakeLayerTest extends RitennTestCase
     public function canMakeServiceDefault()
     {
         $this->artisan('make:service Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Services/TestService.php');
         $this->assertFileExists($this->workbenchAppDir . '/Contracts/Services/TestContract.php');
@@ -28,7 +28,7 @@ class MakeLayerTest extends RitennTestCase
     public function canMakeRepositoryDefault()
     {
         $this->artisan('make:repository Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Repositories/TestRepository.php');
         $this->assertFileExists($this->workbenchAppDir . '/Contracts/Repositories/TestContract.php');
@@ -42,7 +42,7 @@ class MakeLayerTest extends RitennTestCase
         config(['implementator.contracts_categories' => false]);
 
         $this->artisan('make:service Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Services/TestService.php');
         $this->assertFileExists($this->workbenchAppDir . '/Contracts/TestContract.php');
@@ -56,7 +56,7 @@ class MakeLayerTest extends RitennTestCase
         config(['implementator.contracts_categories' => false]);
 
         $this->artisan('make:repository Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Repositories/TestRepository.php');
         $this->assertFileExists($this->workbenchAppDir . '/Contracts/TestContract.php');
@@ -73,7 +73,7 @@ class MakeLayerTest extends RitennTestCase
         ]);
 
         $this->artisan('make:service Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Services/TestService.php');
         $this->assertFileExists($this->workbenchAppDir . '/Interfaces/TestInterface.php');
@@ -90,7 +90,7 @@ class MakeLayerTest extends RitennTestCase
         ]);
 
         $this->artisan('make:repository Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Repositories/TestRepository.php');
         $this->assertFileExists($this->workbenchAppDir . '/Interfaces/TestInterface.php');
@@ -107,7 +107,7 @@ class MakeLayerTest extends RitennTestCase
         ]);
 
         $this->artisan('make:service Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Services/TestService.php');
         $this->assertFileExists($this->workbenchAppDir . '/Interfaces/Services/TestInterface.php');
@@ -124,7 +124,7 @@ class MakeLayerTest extends RitennTestCase
         ]);
 
         $this->artisan('make:repository Test')
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $this->assertFileExists($this->workbenchAppDir . '/Repositories/TestRepository.php');
         $this->assertFileExists($this->workbenchAppDir . '/Interfaces/Repositories/TestInterface.php');

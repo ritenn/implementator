@@ -13,7 +13,9 @@ class MakeServiceClass extends Command
      *
      * @var string
      */
-    protected $signature = 'make:service {name : Service file name}';
+    protected $signature = 'make:service 
+    {name : Service file name} 
+    {--without-contract : create layer without contract implementation}';
 
     /**
      * The console command description.
@@ -41,8 +43,11 @@ class MakeServiceClass extends Command
     public function handle()
     {
         $className = $this->argument('name');
+        $onlyLayer = $this->option('without-contract');
 
-        $result = $this->processCreateClassService->make("Services", $className);
+        $result = $onlyLayer ? $this->processCreateClassService->makeOnlyLayer("Services", $className) :
+                               $this->processCreateClassService->make("Services", $className);
+
         $messageType = $result['error'] ?  'error' : 'info';
         $message = $result['message'] ?? "Unknown error, please report it to package author";
 

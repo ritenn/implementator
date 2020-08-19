@@ -4,10 +4,22 @@ declare(strict_types=1);
 namespace Ritenn\Implementator\Services;
 
 
+use Ritenn\Implementator\Contracts\BindingContract;
 use Ritenn\Implementator\Contracts\ProcessCreateClassContract;
 use Ritenn\Implementator\ImplementatorBase;
 
 class ProcessCreateClassService extends ImplementatorBase implements ProcessCreateClassContract {
+
+    /**
+     * @var Ritenn\Implementator\Contracts\BindingContract
+     */
+    private $bindingService;
+
+    public function __construct(BindingContract $bindingService)
+    {
+        parent::__construct();
+        $this->bindingService = $bindingService;
+    }
 
     /**
      * Make interface and implement to class
@@ -23,7 +35,7 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
         {
             return [
                 'error' => true,
-                'message' => 'Command should be called only from CLI as this is DEV tool.'
+                'message' => 'Command should be called only from CLI.'
             ];
         };
 
@@ -32,7 +44,7 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
         {
             return [
                 'error' => true,
-                'message' => 'Class and implementation already exists.'
+                'message' => 'Contract and implementation already exists.'
             ];
         }
 
@@ -40,7 +52,87 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
         {
             return [
                 'error' => false,
-                'message' => 'Success interface and implementation created.'
+                'message' => 'Success, contract and implementation created.'
+            ];
+        }
+
+        return [
+            'error' => true,
+            'message' => 'Couldn\'t create directories and/or files. Check permissions and try again.'
+        ];
+    }
+
+    /**
+     * Creates only layer - Service or Repository without contract
+     *
+     * @param string $typeOfLayer
+     * @param string $fileName
+     *
+     * @return array
+     */
+    public function makeOnlyLayer(string $typeOfLayer, string $fileName) : array
+    {
+        if (!$this->isCLI())
+        {
+            return [
+                'error' => true,
+                'message' => 'Command should be called only from CLI.'
+            ];
+        };
+
+        if ( $this->checkIfFileExists($this->getImplementationFileFullPath($typeOfLayer, $fileName)) )
+        {
+            return [
+                'error' => true,
+                'message' => 'Layer already exists.'
+            ];
+        }
+
+        if ( $this->createLayer($typeOfLayer, $fileName) )
+        {
+            return [
+                'error' => false,
+                'message' => 'Success, layer class created.'
+            ];
+        }
+
+        return [
+            'error' => true,
+            'message' => 'Couldn\'t create directories and/or files. Check permissions and try again.'
+        ];
+    }
+
+    /**
+     * Make just contract
+     *
+     * @param string $typeOfLayer
+     * @param string $fileName
+     *
+     * @return array
+     */
+    public function makeOnlyContract(string $fileName, string $typeOfLayer = '') : array
+    {
+        if (!$this->isCLI())
+        {
+            return [
+                'error' => true,
+                'message' => 'Command should be called only from CLI.'
+            ];
+        };
+
+        if ( $this->checkIfFileExists($this->getContractFileFullPath($typeOfLayer, $fileName)))
+        {
+            return [
+                'error' => true,
+                'message' => 'Contract already exists.'
+            ];
+        }
+
+        if ( $this->createInterface($typeOfLayer, $fileName))
+        {
+            return [
+                'error' => false,
+                'message' => 'Success, contract created.'
             ];
         }
 
@@ -96,6 +188,27 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
     }
 
     /**
+     * Create only layer file without contract
+     *
+     * @param string $typeOfLayer
+     * @param string $fileName
+     *
+     * @return bool
+     */
+    public function createLayer(string $typeOfLayer, string $fileName) : bool
+    {
+        $namespace = $this->getNamespaceByLayerName(false, $typeOfLayer);
+        $className = $this->getClassName($fileName, false, $typeOfLayer);
+
+        $template = "<?php\n";
+        $template .= "\r\nnamespace " . $namespace . ";\n\n";
+        $template .= "\r\nclass " . $className . " {\n\n";
+        $template .= "\r\n}";
+
+        return $this->createFile($typeOfLayer, $fileName, $template);
+    }
+
+    /**
      * Creates directory (if needed) and file based on $typeOfLayer
      *
      * @param string $typeOfLayer
@@ -107,6 +220,8 @@ class ProcessCreateClassService extends ImplementatorBase implements ProcessCrea
      */
     public function createFile(string $typeOfLayer, string $fileName, String $content, bool $isContract = false) : bool
     {
+        //Reset cached bindings as we create new file.
+        $this->bindingService->resetCache();
 
         $path = $this->getFolderPath($isContract, $typeOfLayer);
         $filenameWithExtension = $this->getFileNameWithExtension($fileName, $isContract, $typeOfLayer);

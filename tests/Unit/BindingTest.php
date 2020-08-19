@@ -18,7 +18,7 @@ class BindingTest extends RitennTestCase
     private function canMakeLayerAndBind(string $layerBaseName, string $layerName = 'service') : void
     {
         $this->artisan('make:' . $layerName .' ' . $layerBaseName)
-            ->expectsOutput('Success interface and implementation created.');
+            ->expectsOutput('Success, contract and implementation created.');
 
         $bindingService = $this->app->make('Ritenn\Implementator\Contracts\BindingContract');
         $bindingService->register();

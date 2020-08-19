@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Ritenn\Implementator;
 
 
-use Illuminate\Contracts\Container\Container;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Ritenn\Implementator\Commands\MakeContract;
 use Ritenn\Implementator\Commands\MakeRepositoryClass;
 use Ritenn\Implementator\Commands\MakeServiceClass;
 use Ritenn\Implementator\Contracts\BindingContract;
@@ -24,22 +23,7 @@ class ImplementatorServiceProvider extends ServiceProvider
     {
         $this->setCommands();
         $this->setConfig();
-
-        /**
-         * Implements all created Contracts/Interfaces to Services and/or Repositories
-         */
-        if ($bindingService->canLoadFromCache() && $this->isProduction()) {
-
-            foreach ($bindingService->cachedBindings as $binding)
-            {
-                $binding = collect($binding);
-                $this->app->bind($binding->first(), $binding->last());
-            }
-
-        } else {
-            $bindingService->resetCache();
-            $bindingService->register();
-        }
+        $this->bindDynamicOrFromCache($bindingService);
     }
 
     /**
@@ -52,6 +36,26 @@ class ImplementatorServiceProvider extends ServiceProvider
         $this->bindPackageInterfaces();
     }
 
+    /**
+     * Implements all created Contracts/Interfaces to Services and/or Repositories
+     *
+     * @param BindingContract $bindingService
+     */
+    private function bindDynamicOrFromCache(BindingContract $bindingService) : void
+    {
+        if ($bindingService->canLoadFromCache() && $this->isProduction()) {
+
+            foreach ($bindingService->cachedBindings as $binding)
+            {
+                $binding = collect($binding);
+                $this->app->bind($binding->first(), $binding->last());
+            }
+
+        } else {
+
+            $bindingService->register();
+        }
+    }
 
     /**
      * Set configs & allows to publish
@@ -89,7 +93,8 @@ class ImplementatorServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole() && !$this->isProduction()) {
             $this->commands([
                 MakeServiceClass::class,
-                MakeRepositoryClass::class
+                MakeRepositoryClass::class,
+                MakeContract::class
             ]);
         }
     }
