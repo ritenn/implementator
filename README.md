@@ -5,7 +5,9 @@ Make your code clean and readable!
 
 ## Installation
 
+Requires PHP >=7.0 and Laravel 7.x
 
+```composer require ritenn/implementator```
 
 ## Publishing config
 
