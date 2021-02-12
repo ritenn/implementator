@@ -75,7 +75,8 @@ abstract class ImplementatorBase {
      */
     public function validateConfigSetTerminology() : void
     {
-        $terminology = config('implementator.terminology'); \Log::error(config('implementator.terminology'));
+        $terminology = config('implementator.terminology');
+//        \Log::error(config('implementator.terminology'));
         $this->interfaceTerminology = in_array($terminology, array('Contracts', 'Interfaces')) ? $terminology : 'Contracts';
     }
 
